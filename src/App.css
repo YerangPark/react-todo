@@ -1,3 +1,71 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+body {
+  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+}
+
+.Title {
+  font-family: Pretendard;
+  text-align: center;
+  font-weight: 800;
+  font-size: 8em;
+  margin-top: 1em;
+}
+
+.InputTodo {
+  display: inline-block !important;
+  width: 30em !important;
+  height: 3em;
+  margin-right: 10px;
+}
+
+.AddBtn {
+  height: 3em;
+  width: 3em;
+  transform: translateY(-2px);
+}
+
+.CheckBox {
+  display: inline-block !important;
+  text-align: left;
+  width: 33em !important;
+  padding: 1em;
+}
+
+.FixedWidth {
+  width: 35em !important;
+  margin: auto;
+}
+
+.TopBlank {
+  margin-top: 1em;
+}
+
+.FooterName {
+  display: inline;
+  float: left;
+  text-align: left;
+  margin-left : 2em;
+  color: #909090;
+}
+
+.FooterSocial {
+  display: inline;
+  float: right;
+  margin-right : 2em;
+}
+
+.FooterSocialIcon {
+  margin-right : 0.5em;
+}
+
+.Link {
+  color: #909090 !important;
+}
+
+.ActiveLink {
+  color: #000000 !important;
+}
+
 .App {
   text-align: center;
 }
