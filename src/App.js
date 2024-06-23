@@ -1,5 +1,5 @@
 import './App.css';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Nav from 'react-bootstrap/Nav';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
@@ -13,16 +13,33 @@ const TODO_STATUS = {
 }
 
 function App() {
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
-  let [todos, setTodos] = useState([{id: 1, content: 'Do sth', status: TODO_STATUS.INCOMPLETE},
+  const [todos, setTodos] = useState([{id: 1, content: 'Do sth', status: TODO_STATUS.INCOMPLETE},
     {id: 2, content: 'Do anything', status: TODO_STATUS.COMPLETE}]);
+  const [inputStr, setInputStr] = useState("");
+  const sortedTodos = [...todos].sort((a, b) => {
+    if (a.status === TODO_STATUS.INCOMPLETE && b.status === TODO_STATUS.COMPLETE) {
+      return -1;
+    }
+    if (a.status === TODO_STATUS.COMPLETE && b.status === TODO_STATUS.INCOMPLETE) {
+      return 1;
+    }
+    return 0;
+  });
+
 
   function changeStatus(id, value) {
     let tmpTodos = [...todos];
     let idx = tmpTodos.findIndex(obj => obj.id === parseInt(id));
     tmpTodos[idx].status = value;
     setTodos(tmpTodos);
+  }
+
+  function handleButtonClick() {
+    let tmpTodo = {id: todos[todos.length-1].id + 1, content: inputStr, status: TODO_STATUS.INCOMPLETE};
+    setTodos([...todos, tmpTodo]);
+    setInputStr('');
   }
 
   return (
@@ -71,11 +88,13 @@ function App() {
                 aria-describedby="todoInputBlock"
                 placeholder="Type..."
                 className="InputTodo"
+                value={inputStr}
+                onChange={(e)=>{setInputStr(e.target.value)}} // TODO : 추후 length 제한 걸기. 300자?
               />
-              <Button className="AddBtn" variant="dark">+</Button>
+              <Button className="AddBtn" variant="dark" onClick={handleButtonClick}>+</Button>
             </div>
             <div className="FixedWidth TopBlank">
-              { todos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} key={i}/> }) }
+              { sortedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} key={i}/> }) }
             </div>
           </>
         }/>
