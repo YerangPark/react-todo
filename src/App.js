@@ -1,5 +1,5 @@
 import './App.css';
-import React from 'react';
+import React, { useState } from 'react';
 import Nav from 'react-bootstrap/Nav';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
@@ -7,8 +7,23 @@ import CloseButton from 'react-bootstrap/CloseButton';
 import { Routes, Route, useNavigate, Outlet } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+const TODO_STATUS = {
+  INCOMPLETE : 1,
+  COMPLETE : 2,
+}
+
 function App() {
   let navigate = useNavigate();
+
+  let [todos, setTodos] = useState([{id: 1, content: 'Do sth', status: TODO_STATUS.INCOMPLETE},
+    {id: 2, content: 'Do anything', status: TODO_STATUS.COMPLETE}]);
+
+  function changeStatus(id, value) {
+    let tmpTodos = [...todos];
+    let idx = tmpTodos.findIndex(obj => obj.id === parseInt(id));
+    tmpTodos[idx].status = value;
+    setTodos(tmpTodos);
+  }
 
   return (
     <div className="App">
@@ -60,7 +75,7 @@ function App() {
               <Button className="AddBtn" variant="dark">+</Button>
             </div>
             <div className="FixedWidth TopBlank">
-              { Checkbox() }
+              { todos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} key={i}/> }) }
             </div>
           </>
         }/>
@@ -94,29 +109,23 @@ function App() {
   );
 }
 
-function Checkbox() {
+function DrawTodo(props) {
   return (
     <Form>
       <div key={"default-checkbox"} className="mb-3">
-        <div>
-          <Form.Check // prettier-ignore
-            type="checkbox"
-            id={"default-checkbox"}
-            label={"default checkbox"}
-            className="CheckBox"
-          />
-          <CloseButton />
-        </div>
-        <div>
-          <Form.Check
-            disabled
-            type="checkbox"
-            label={"disabled checkbox"}
-            id={"disabled-default-checkbox"}
-            className="CheckBox"
-          />
-          <CloseButton />
-        </div>
+        <Form.Check // prettier-ignore
+          type="checkbox"
+          id={"default-checkbox"}
+          label={props.todo.content}
+          className="CheckBox"
+          checked={props.todo.status === TODO_STATUS.COMPLETE}
+          onChange={ (e)=>{
+            console.log(e.target.checked);
+            if (e.target.checked) { props.changeStatusFunc(props.todo.id, TODO_STATUS.COMPLETE); }
+            else { props.changeStatusFunc(props.todo.id, TODO_STATUS.INCOMPLETE); }
+          } }
+        />
+        <CloseButton />
       </div>
     </Form>
   );

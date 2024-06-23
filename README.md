@@ -14,6 +14,8 @@
 - 타입 스크립트 공부한거 도입([Docs](https://typescript-kr.github.io/))
 - 간결하고 직관적으로 만들기(Emotion, [Docs](https://emotion.sh/docs/introduction))
 
+<br/>
+
 ## 목업
 ![mockup](readme_image/Todo-2.png)
 
