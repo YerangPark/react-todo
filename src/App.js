@@ -1,13 +1,14 @@
 import './App.css';
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Nav from 'react-bootstrap/Nav';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import CloseButton from 'react-bootstrap/CloseButton';
-import { Routes, Route, useNavigate, Outlet } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const TODO_STATUS = {
+  ALL : 0,
   INCOMPLETE : 1,
   COMPLETE : 2,
 }
@@ -27,7 +28,7 @@ function App() {
     }
     return 0;
   });
-
+  const [tab, setTab] = useState(TODO_STATUS.ALL);
 
   function changeStatus(id, value) {
     let tmpTodos = [...todos];
@@ -36,10 +37,27 @@ function App() {
     setTodos(tmpTodos);
   }
 
-  function handleButtonClick() {
-    let tmpTodo = {id: todos[todos.length-1].id + 1, content: inputStr, status: TODO_STATUS.INCOMPLETE};
+  function deleteTodo(id) {
+    console.log(`delete ${id}`);
+    let tmpTodos = [...todos];
+    let idx = tmpTodos.findIndex(obj => obj.id === parseInt(id));
+    tmpTodos.splice(idx, 1);
+    setTodos(tmpTodos);
+    console.log(todos);
+  }
+
+  function handleAddButtonClick() {
+    let newId = 1;
+    if (todos.length !== 0) {
+      newId = todos[todos.length-1].id + 1;
+    }
+    let tmpTodo = {id: newId, content: inputStr, status: TODO_STATUS.INCOMPLETE};
     setTodos([...todos, tmpTodo]);
     setInputStr('');
+  }
+
+  function handleTabClick(status) {
+    console.log(`status : ${status}`);
   }
 
   return (
@@ -68,15 +86,15 @@ function App() {
           <>
             <p className="Title">Todo</p>
             <div>
-              <Nav className="justify-content-center" activeKey="/home">
+              <Nav className="justify-content-center" defaultActiveKey="link-0">
                 <Nav.Item>
-                  <Nav.Link className="ActiveLink" href="/home">All</Nav.Link>
+                  <Nav.Link className="ActiveLink" eventKey="link-0" onClick={()=>handleTabClick(TODO_STATUS.ALL)}>All</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
-                  <Nav.Link className="Link" eventKey="link-1">Completed</Nav.Link>
+                  <Nav.Link className="Link" eventKey="link-1" onClick={()=>handleTabClick(TODO_STATUS.COMPLETE)}>Completed</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
-                  <Nav.Link className="Link" eventKey="link-2">Incompleted</Nav.Link>
+                  <Nav.Link className="Link" eventKey="link-2" onClick={()=>handleTabClick(TODO_STATUS.INCOMPLETE)}>Incompleted</Nav.Link>
                 </Nav.Item>
               </Nav>
             </div>
@@ -91,10 +109,10 @@ function App() {
                 value={inputStr}
                 onChange={(e)=>{setInputStr(e.target.value)}} // TODO : 추후 length 제한 걸기. 300자?
               />
-              <Button className="AddBtn" variant="dark" onClick={handleButtonClick}>+</Button>
+              <Button className="AddBtn" variant="dark" onClick={handleAddButtonClick}>+</Button>
             </div>
             <div className="FixedWidth TopBlank">
-              { sortedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} key={i}/> }) }
+              { sortedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} deleteTodoFunc={deleteTodo} key={i}/> }) }
             </div>
           </>
         }/>
@@ -144,11 +162,10 @@ function DrawTodo(props) {
             else { props.changeStatusFunc(props.todo.id, TODO_STATUS.INCOMPLETE); }
           } }
         />
-        <CloseButton />
+        <CloseButton onClick={()=>props.deleteTodoFunc(props.todo.id)}/>
       </div>
     </Form>
   );
 }
-
 
 export default App;

@@ -58,6 +58,17 @@ body {
   margin-right : 0.5em;
 }
 
+.start {
+  opacity: 0;
+}
+
+.end {
+  opacity: 1;
+  transition: all 0.5s; /* 스타일이 변경될 때 0.5초에 걸쳐서 변화 */
+}
+
+/***********************/
+
 .Link {
   color: #909090 !important;
 }
