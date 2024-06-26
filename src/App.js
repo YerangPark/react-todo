@@ -19,16 +19,34 @@ function App() {
   const [todos, setTodos] = useState([{id: 1, content: 'Do sth', status: TODO_STATUS.INCOMPLETE},
     {id: 2, content: 'Do anything', status: TODO_STATUS.COMPLETE}]);
   const [inputStr, setInputStr] = useState("");
-  const sortedTodos = [...todos].sort((a, b) => {
-    if (a.status === TODO_STATUS.INCOMPLETE && b.status === TODO_STATUS.COMPLETE) {
-      return -1;
-    }
-    if (a.status === TODO_STATUS.COMPLETE && b.status === TODO_STATUS.INCOMPLETE) {
-      return 1;
-    }
-    return 0;
-  });
+  // const sortedTodos = [...todos].sort((a, b) => {
+  //   if (a.status === TODO_STATUS.INCOMPLETE && b.status === TODO_STATUS.COMPLETE) {
+  //     return -1;
+  //   }
+  //   if (a.status === TODO_STATUS.COMPLETE && b.status === TODO_STATUS.INCOMPLETE) {
+  //     return 1;
+  //   }
+  //   return 0;
+  // });
   const [tab, setTab] = useState(TODO_STATUS.ALL);
+  let [completedTodos, setCompletedTodos] = useState([]);
+  let [incompletedTodos, setIncompletedTodos] = useState([]);
+
+  useEffect(()=>{
+    const newCompletedTodos = [];
+    const newIncompletedTodos = [];
+
+    todos.forEach((obj) => {
+      if (obj.status === TODO_STATUS.COMPLETE) {
+        newCompletedTodos.push(obj);
+      } else if (obj.status === TODO_STATUS.INCOMPLETE) {
+        newIncompletedTodos.push(obj);
+      }
+    });
+
+    setCompletedTodos(newCompletedTodos);
+    setIncompletedTodos(newIncompletedTodos);
+  }, [todos]);
 
   function changeStatus(id, value) {
     let tmpTodos = [...todos];
@@ -54,10 +72,6 @@ function App() {
     let tmpTodo = {id: newId, content: inputStr, status: TODO_STATUS.INCOMPLETE};
     setTodos([...todos, tmpTodo]);
     setInputStr('');
-  }
-
-  function handleTabClick(status) {
-    console.log(`status : ${status}`);
   }
 
   return (
@@ -88,13 +102,13 @@ function App() {
             <div>
               <Nav className="justify-content-center" defaultActiveKey="link-0">
                 <Nav.Item>
-                  <Nav.Link className="ActiveLink" eventKey="link-0" onClick={()=>handleTabClick(TODO_STATUS.ALL)}>All</Nav.Link>
+                  <Nav.Link className="ActiveLink" eventKey="link-0" onClick={()=>setTab(TODO_STATUS.ALL)}>All</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
-                  <Nav.Link className="Link" eventKey="link-1" onClick={()=>handleTabClick(TODO_STATUS.COMPLETE)}>Completed</Nav.Link>
+                  <Nav.Link className="Link" eventKey="link-1" onClick={()=>setTab(TODO_STATUS.COMPLETE)}>Completed</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
-                  <Nav.Link className="Link" eventKey="link-2" onClick={()=>handleTabClick(TODO_STATUS.INCOMPLETE)}>Incompleted</Nav.Link>
+                  <Nav.Link className="Link" eventKey="link-2" onClick={()=>setTab(TODO_STATUS.INCOMPLETE)}>Incompleted</Nav.Link>
                 </Nav.Item>
               </Nav>
             </div>
@@ -112,7 +126,16 @@ function App() {
               <Button className="AddBtn" variant="dark" onClick={handleAddButtonClick}>+</Button>
             </div>
             <div className="FixedWidth TopBlank">
-              { sortedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} deleteTodoFunc={deleteTodo} key={i}/> }) }
+              {
+                (tab === TODO_STATUS.INCOMPLETE || tab === TODO_STATUS.ALL) ?
+                  incompletedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} deleteTodoFunc={deleteTodo} key={i}/>})
+                  : null
+              }
+              {
+                (tab === TODO_STATUS.COMPLETE || tab === TODO_STATUS.ALL) ?
+                  completedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} deleteTodoFunc={deleteTodo} key={i}/>})
+                  : null
+              }
             </div>
           </>
         }/>
@@ -150,7 +173,7 @@ function DrawTodo(props) {
   return (
     <Form>
       <div key={"default-checkbox"} className="mb-3">
-        <Form.Check // prettier-ignore
+        <Form.Check
           type="checkbox"
           id={"default-checkbox"}
           label={props.todo.content}

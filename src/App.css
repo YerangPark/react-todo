@@ -67,6 +67,34 @@ body {
   transition: all 0.5s; /* 스타일이 변경될 때 0.5초에 걸쳐서 변화 */
 }
 
+.txt-hide {
+  position: absolute;
+  clip: rect(0 0 0 0);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/*체크를 안 했을 때*/
+label::before{
+display: inline-block;
+  content:"";
+  width: 체크박스 크기;
+  height: 체크박스 크기;
+  margin-right:label과의 여백;
+  background-image:url("./img/checkFalse.png");
+}
+
+/*체크했을 때*/
+input:checked+labl::before{
+background-image:url("./img/checkTrue.png");
+}
+
+/*체크박스 선택한 상태일 때 테두리 생김*/
+input:focus+.labl::before{
+  outline:2px solid #000;
+}
+
 /***********************/
 
 .Link {
