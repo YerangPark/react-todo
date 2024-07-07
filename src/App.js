@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Nav from 'react-bootstrap/Nav';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -32,6 +33,7 @@ function App() {
   const [mainTab, setMainTab] = useState(PAGE_STATUS.TODO);
   let [completedTodos, setCompletedTodos] = useState([]);
   let [incompletedTodos, setIncompletedTodos] = useState([]);
+  let [modalShow, setModalShow] = useState(false);
 
   useEffect(()=>{
     // Think : 투두가 추가되면 항상 Incompleted로 추가될텐데, completed state도 업데이트하게 됨.
@@ -99,6 +101,7 @@ function App() {
       <Routes>
         <Route path="/" element={
           <>
+            <DrawModal show={modalShow} onHide={() => setModalShow(false)}></DrawModal>
             <p className="Title">Todo</p>
             <div>
               <Nav className="justify-content-center" defaultActiveKey="link-0">
@@ -129,7 +132,7 @@ function App() {
             <div className="FixedWidth TopBlank">
               {
                 (tab === TODO_STATUS.INCOMPLETE || tab === TODO_STATUS.ALL) ?
-                  incompletedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} deleteTodoFunc={deleteTodo} key={i}/>})
+                  incompletedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} deleteTodoFunc={deleteTodo} key={i} modalOpenFunc={setModalShow}/>})
                   : null
               }
               {(tab === TODO_STATUS.ALL) ? <hr/> : null}
@@ -187,10 +190,42 @@ function DrawTodo(props) {
             else { props.changeStatusFunc(props.todo.id, TODO_STATUS.INCOMPLETE); }
           } }
         />
-        <EditImg width="25" height="25" fill="black" stroke="black" onClick={()=>{console.log("수정 클릭")}}/>
+        <EditImg width="25" height="25" fill="black" stroke="black" onClick={()=>{props.modalOpenFunc(true)}}/>
         <DeleteImg width="30" height="30" fill="black" stroke="black" onClick={()=>props.deleteTodoFunc(props.todo.id)}/>
       </div>
     </Form>
+  );
+}
+
+function DrawModal(props) {
+  return (
+    <Modal
+      {...props} // show={modalShow} onHide={() => setModalShow(false)}
+      size="lg"
+      aria-labelledby="contained-modal-title-vcenter"
+      centered
+    >
+      <Modal.Header closeButton>
+        <Modal.Title id="contained-modal-title-vcenter">
+          모달 제목
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form.Control
+          type="text"
+          id="inputTodo"
+          aria-describedby="todoInputBlock"
+          placeholder="Type..."
+          className="mb-3"
+          value="임시값"
+          // onChange={(e)=>{setInputStr(e.target.value)}} // TODO : 추후 length 제한 걸기. 300자?
+        />
+      </Modal.Body>
+      <Modal.Footer>
+        <Button onClick={props.onHide}>Save</Button>
+        <Button onClick={props.onHide}>Close</Button>
+      </Modal.Footer>
+    </Modal>
   );
 }
 
