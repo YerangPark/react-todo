@@ -3,14 +3,23 @@ import React, { useState, useEffect } from 'react';
 import Nav from 'react-bootstrap/Nav';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
-import CloseButton from 'react-bootstrap/CloseButton';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+
+// images
+import { ReactComponent as EditImg } from './img/Edit.svg';
+import { ReactComponent as DeleteImg } from './img/Delete.svg';
+
 
 const TODO_STATUS = {
   ALL : 0,
   INCOMPLETE : 1,
   COMPLETE : 2,
+}
+
+const PAGE_STATUS = {
+  TODO : 0,
+  INFO : 1,
 }
 
 function App() {
@@ -19,20 +28,14 @@ function App() {
   const [todos, setTodos] = useState([{id: 1, content: 'Do sth', status: TODO_STATUS.INCOMPLETE},
     {id: 2, content: 'Do anything', status: TODO_STATUS.COMPLETE}]);
   const [inputStr, setInputStr] = useState("");
-  // const sortedTodos = [...todos].sort((a, b) => {
-  //   if (a.status === TODO_STATUS.INCOMPLETE && b.status === TODO_STATUS.COMPLETE) {
-  //     return -1;
-  //   }
-  //   if (a.status === TODO_STATUS.COMPLETE && b.status === TODO_STATUS.INCOMPLETE) {
-  //     return 1;
-  //   }
-  //   return 0;
-  // });
   const [tab, setTab] = useState(TODO_STATUS.ALL);
+  const [mainTab, setMainTab] = useState(PAGE_STATUS.TODO);
   let [completedTodos, setCompletedTodos] = useState([]);
   let [incompletedTodos, setIncompletedTodos] = useState([]);
 
   useEffect(()=>{
+    // Think : 투두가 추가되면 항상 Incompleted로 추가될텐데, completed state도 업데이트하게 됨.
+    // Think : 또한 마지막 인덱스만 검사하면 되지 않나..? 싶기도 한데 -> 그러면 todo update 함수에서 처리하면 도는 횟수도 줄 것 같은데..
     const newCompletedTodos = [];
     const newIncompletedTodos = [];
 
@@ -42,7 +45,7 @@ function App() {
       } else if (obj.status === TODO_STATUS.INCOMPLETE) {
         newIncompletedTodos.push(obj);
       }
-    });
+    }, []);
 
     setCompletedTodos(newCompletedTodos);
     setIncompletedTodos(newIncompletedTodos);
@@ -56,12 +59,10 @@ function App() {
   }
 
   function deleteTodo(id) {
-    console.log(`delete ${id}`);
     let tmpTodos = [...todos];
     let idx = tmpTodos.findIndex(obj => obj.id === parseInt(id));
     tmpTodos.splice(idx, 1);
     setTodos(tmpTodos);
-    console.log(todos);
   }
 
   function handleAddButtonClick() {
@@ -80,16 +81,16 @@ function App() {
         <Nav className="justify-content-end TopBlank" activeKey="/home">
           <Nav.Item>
             <Nav.Link
-              className="ActiveLink"
-              onClick={()=>{ navigate('/') }}>
+              className={mainTab === PAGE_STATUS.TODO ? "ActiveLink" : "Link"}
+              onClick={()=>{ setMainTab(PAGE_STATUS.TODO); navigate('/'); }}>
               Todo
             </Nav.Link>
           </Nav.Item>
           <Nav.Item>
             <Nav.Link
-              className="Link"
-              onClick={()=>{ navigate('/contact') }}>
-              Contact
+              className={mainTab === PAGE_STATUS.INFO ? "ActiveLink" : "Link"}
+              onClick={()=>{ setMainTab(PAGE_STATUS.INFO); navigate('/info'); }}>
+              Info
             </Nav.Link>
           </Nav.Item>
         </Nav>
@@ -102,13 +103,13 @@ function App() {
             <div>
               <Nav className="justify-content-center" defaultActiveKey="link-0">
                 <Nav.Item>
-                  <Nav.Link className="ActiveLink" eventKey="link-0" onClick={()=>setTab(TODO_STATUS.ALL)}>All</Nav.Link>
+                  <Nav.Link className={tab === TODO_STATUS.ALL ? "ActiveLink" : "Link"} eventKey="link-0" onClick={()=>setTab(TODO_STATUS.ALL)}>All</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
-                  <Nav.Link className="Link" eventKey="link-1" onClick={()=>setTab(TODO_STATUS.COMPLETE)}>Completed</Nav.Link>
+                  <Nav.Link className={tab === TODO_STATUS.COMPLETE ? "ActiveLink" : "Link"} eventKey="link-1" onClick={()=>setTab(TODO_STATUS.COMPLETE)}>Completed</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
-                  <Nav.Link className="Link" eventKey="link-2" onClick={()=>setTab(TODO_STATUS.INCOMPLETE)}>Incompleted</Nav.Link>
+                  <Nav.Link className={tab === TODO_STATUS.INCOMPLETE ? "ActiveLink" : "Link"} eventKey="link-2" onClick={()=>setTab(TODO_STATUS.INCOMPLETE)}>Incompleted</Nav.Link>
                 </Nav.Item>
               </Nav>
             </div>
@@ -131,6 +132,7 @@ function App() {
                   incompletedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} deleteTodoFunc={deleteTodo} key={i}/>})
                   : null
               }
+              {(tab === TODO_STATUS.ALL) ? <hr/> : null}
               {
                 (tab === TODO_STATUS.COMPLETE || tab === TODO_STATUS.ALL) ?
                   completedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} deleteTodoFunc={deleteTodo} key={i}/>})
@@ -139,7 +141,7 @@ function App() {
             </div>
           </>
         }/>
-        <Route path="/contact" element={
+        <Route path="/info" element={
           <>
             <h1>설명란입니다.</h1>
           </>
@@ -185,7 +187,8 @@ function DrawTodo(props) {
             else { props.changeStatusFunc(props.todo.id, TODO_STATUS.INCOMPLETE); }
           } }
         />
-        <CloseButton onClick={()=>props.deleteTodoFunc(props.todo.id)}/>
+        <EditImg width="25" height="25" fill="black" stroke="black" onClick={()=>{console.log("수정 클릭")}}/>
+        <DeleteImg width="30" height="30" fill="black" stroke="black" onClick={()=>props.deleteTodoFunc(props.todo.id)}/>
       </div>
     </Form>
   );
