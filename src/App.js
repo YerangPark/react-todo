@@ -31,9 +31,10 @@ function App() {
   const [inputStr, setInputStr] = useState("");
   const [tab, setTab] = useState(TODO_STATUS.ALL);
   const [mainTab, setMainTab] = useState(PAGE_STATUS.TODO);
-  let [completedTodos, setCompletedTodos] = useState([]);
-  let [incompletedTodos, setIncompletedTodos] = useState([]);
-  let [modalShow, setModalShow] = useState(false);
+  const [completedTodos, setCompletedTodos] = useState([]);
+  const [incompletedTodos, setIncompletedTodos] = useState([]);
+  const [modalShow, setModalShow] = useState(false);
+  const [selectedItem, setSelectedItem] = useState({id: 0, content: 'null', status: TODO_STATUS.INCOMPLETE});
 
   useEffect(()=>{
     // Think : 투두가 추가되면 항상 Incompleted로 추가될텐데, completed state도 업데이트하게 됨.
@@ -77,6 +78,18 @@ function App() {
     setInputStr('');
   }
 
+  function handleEditButtonClick(todo) {
+    setSelectedItem(todo);
+    setModalShow(true);
+  }
+
+  function handleEditSaveButtonClick(id, value) {
+    let tmpTodos = [...todos];
+    let idx = tmpTodos.findIndex(obj => obj.id === parseInt(id));
+    tmpTodos[idx].content = value;
+    setTodos(tmpTodos);
+  }
+
   return (
     <div className="App">
       <div>
@@ -101,7 +114,7 @@ function App() {
       <Routes>
         <Route path="/" element={
           <>
-            <DrawModal show={modalShow} onHide={() => setModalShow(false)}></DrawModal>
+            <DrawModal todo={selectedItem} show={modalShow} onHide={() => setModalShow(false)} onSave={handleEditSaveButtonClick}></DrawModal>
             <p className="Title">Todo</p>
             <div>
               <Nav className="justify-content-center" defaultActiveKey="link-0">
@@ -132,13 +145,13 @@ function App() {
             <div className="FixedWidth TopBlank">
               {
                 (tab === TODO_STATUS.INCOMPLETE || tab === TODO_STATUS.ALL) ?
-                  incompletedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} deleteTodoFunc={deleteTodo} key={i} modalOpenFunc={setModalShow}/>})
+                  incompletedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} deleteTodoFunc={deleteTodo} key={i} handleEditButtonClick={handleEditButtonClick}/>})
                   : null
               }
               {(tab === TODO_STATUS.ALL) ? <hr/> : null}
               {
                 (tab === TODO_STATUS.COMPLETE || tab === TODO_STATUS.ALL) ?
-                  completedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} deleteTodoFunc={deleteTodo} key={i}/>})
+                  completedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} deleteTodoFunc={deleteTodo} key={i} handleEditButtonClick={handleEditButtonClick}/>})
                   : null
               }
             </div>
@@ -190,7 +203,7 @@ function DrawTodo(props) {
             else { props.changeStatusFunc(props.todo.id, TODO_STATUS.INCOMPLETE); }
           } }
         />
-        <EditImg width="25" height="25" fill="black" stroke="black" onClick={()=>{props.modalOpenFunc(true)}}/>
+        <EditImg width="25" height="25" fill="black" stroke="black" onClick={()=>{props.handleEditButtonClick(props.todo);}}/>
         <DeleteImg width="30" height="30" fill="black" stroke="black" onClick={()=>props.deleteTodoFunc(props.todo.id)}/>
       </div>
     </Form>
@@ -198,16 +211,19 @@ function DrawTodo(props) {
 }
 
 function DrawModal(props) {
+  const [editValue, setEditValue] = useState(props.todo.content);
+
   return (
     <Modal
-      {...props} // show={modalShow} onHide={() => setModalShow(false)}
+      show={props.show}
+      onHide={props.onHide}
       size="lg"
       aria-labelledby="contained-modal-title-vcenter"
       centered
     >
       <Modal.Header closeButton>
         <Modal.Title id="contained-modal-title-vcenter">
-          모달 제목
+          Edit
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
@@ -217,12 +233,12 @@ function DrawModal(props) {
           aria-describedby="todoInputBlock"
           placeholder="Type..."
           className="mb-3"
-          value="임시값"
-          // onChange={(e)=>{setInputStr(e.target.value)}} // TODO : 추후 length 제한 걸기. 300자?
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)} // TODO : 추후 length 제한 걸기. 300자?
         />
       </Modal.Body>
       <Modal.Footer>
-        <Button onClick={props.onHide}>Save</Button>
+        <Button onClick={() => {props.onSave(props.todo.id, editValue); props.onHide()}}>Save</Button>
         <Button onClick={props.onHide}>Close</Button>
       </Modal.Footer>
     </Modal>
