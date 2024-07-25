@@ -5,6 +5,7 @@ import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 // images
@@ -27,22 +28,26 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [todos, setTodos] = useState([{id: 1, content: 'Do sth', status: TODO_STATUS.INCOMPLETE},
-    {id: 2, content: 'Do anything', status: TODO_STATUS.COMPLETE}]);
+  const [todos, setTodos] = useState([]);
+  // {id: 1, contents: 'Do sth', status: TODO_STATUS.INCOMPLETE}, {id: 2, contents: 'Do anything', status: TODO_STATUS.COMPLETE}
   const [inputStr, setInputStr] = useState("");
   const [tab, setTab] = useState(TODO_STATUS.ALL);
   const [mainTab, setMainTab] = useState(PAGE_STATUS.TODO);
   const [completedTodos, setCompletedTodos] = useState([]);
   const [incompletedTodos, setIncompletedTodos] = useState([]);
   const [modalShow, setModalShow] = useState(false);
-  const [selectedItem, setSelectedItem] = useState({id: 0, content: 'null', status: TODO_STATUS.INCOMPLETE});
+  const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(()=>{
     // 초반에 로컬 스토리지에서 불러오기
-    let localData = localStorage.getItem('data');
-    if (localData) {
-      setTodos(JSON.parse(localData));
-    }
+    getAllTodos()
+    .then((todoData) => {
+      setTodos(todoData);
+    })
+    .catch((error) => {
+      console.error('Error handling all todos:', error);
+    });
+      // setTodos(JSON.parse(todoData));
   }, []);
 
   useEffect(() => {
@@ -68,45 +73,68 @@ function App() {
   }, [todos]);
 
   function changeStatus(id, value) {
+    const previousTodos = [...todos];
     let tmpTodos = [...todos];
     let idx = tmpTodos.findIndex(obj => obj.id === parseInt(id));
     tmpTodos[idx].status = value;
-    handleSaveTodos(tmpTodos);
+    setTodos(tmpTodos);
+    updateTodoStatus(id, value)
+    .catch((error) => {
+      setTodos(previousTodos);
+      console.error('Error handling change todo status:', error);
+    });
   }
 
-  function deleteTodo(id) {
+  function handleDeleteButtonClick(id) {
+    const previousTodos = [...todos];
     let tmpTodos = [...todos];
     let idx = tmpTodos.findIndex(obj => obj.id === parseInt(id));
     tmpTodos.splice(idx, 1);
-    handleSaveTodos(tmpTodos);
+    setTodos(tmpTodos);
+    deleteTodo(id)
+    .catch((error) => {
+      setTodos(previousTodos);
+      console.error('Error handling delete todo:', error);
+    });
   }
 
   function handleAddButtonClick() {
+    const previousTodos = [...todos];
     let newId = 1;
     if (todos.length !== 0) {
       newId = todos[todos.length-1].id + 1;
     }
-    let tmpTodo = {id: newId, content: inputStr, status: TODO_STATUS.INCOMPLETE};
-    handleSaveTodos([...todos, tmpTodo]);
+    let tmpTodo = {id: newId, contents: inputStr, status: TODO_STATUS.INCOMPLETE};
+    setTodos([...todos, tmpTodo]);
     setInputStr('');
+    insertTodo(newId, inputStr, TODO_STATUS.INCOMPLETE)
+    .catch((error) => {
+      setTodos(previousTodos);
+      console.error('Error handling get all todos:', error);
+    });
   }
 
-  function handleEditButtonClick(todo) {
-    setSelectedItem(todo);
-    setModalShow(true);
+  async function handleEditButtonClick(todo) {
+    try {
+      setSelectedItem(todo);
+      setModalShow(true);
+    } catch (error) {
+      console.error('Error updating selected item:', error);
+    }
   }
 
   function handleEditSaveButtonClick(id, value) {
+    const previousTodos = [...todos];
     let tmpTodos = [...todos];
     let idx = tmpTodos.findIndex(obj => obj.id === parseInt(id));
-    tmpTodos[idx].content = value;
-    handleSaveTodos(tmpTodos);
-  }
+    tmpTodos[idx].contents = value;
+    setTodos(tmpTodos);
 
-  function handleSaveTodos(data) {
-    setTodos(data);
-    // 로컬 스토리지에 저장
-    localStorage.setItem('data', JSON.stringify(data));
+    updateTodoContents(id, value)
+    .catch((error) => {
+      setTodos(previousTodos);
+      console.error('Error handling edit todo:', error);
+    });
   }
 
   return (
@@ -133,7 +161,12 @@ function App() {
       <Routes>
         <Route path="/" element={
           <>
-            <DrawModal todo={selectedItem} show={modalShow} onHide={() => setModalShow(false)} onSave={handleEditSaveButtonClick}></DrawModal>
+            <DrawModal
+              todo={selectedItem}
+              show={modalShow}
+              onHide={() => setModalShow(false)}
+              onSave={handleEditSaveButtonClick}
+            />
             <p className="Title">Todo</p>
             <div>
               <Nav className="justify-content-center" defaultActiveKey="link-0">
@@ -164,13 +197,13 @@ function App() {
             <div className="FixedWidth TopBlank">
               {
                 (tab === TODO_STATUS.INCOMPLETE || tab === TODO_STATUS.ALL) ?
-                  incompletedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} deleteTodoFunc={deleteTodo} key={i} handleEditButtonClick={handleEditButtonClick}/>})
+                  incompletedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} deleteTodoFunc={handleDeleteButtonClick} key={i} handleEditButtonClick={handleEditButtonClick}/>})
                   : null
               }
               {(tab === TODO_STATUS.ALL) ? <hr/> : null}
               {
                 (tab === TODO_STATUS.COMPLETE || tab === TODO_STATUS.ALL) ?
-                  completedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} deleteTodoFunc={deleteTodo} key={i} handleEditButtonClick={handleEditButtonClick}/>})
+                  completedTodos.map((todo, i)=>{ return <DrawTodo todo={todo} changeStatusFunc={changeStatus} deleteTodoFunc={handleDeleteButtonClick} key={i} handleEditButtonClick={handleEditButtonClick}/>})
                   : null
               }
             </div>
@@ -194,15 +227,9 @@ function App() {
         <div className="FooterSocial">
           <img
             className="FooterSocialIcon"
-            src={require('./img/SocialInsta.png')}
-            alt="Button"
-            onClick={()=>{console.log("Insta Btn Clicked")}}
-          />
-          <img
-            className="FooterSocialIcon"
             src={require('./img/SocialGithub.png')}
             alt="Button"
-            onClick={()=>{console.log("GitHub Btn Clicked")}}
+            onClick={()=>{window.open('https://github.com/YerangPark', '_blank', 'noopener,noreferrer');}}
           />
         </div>
         <div style={{height: '5em'}}></div>
@@ -218,7 +245,7 @@ function DrawTodo(props) {
         <Form.Check
           type="checkbox"
           id={"default-checkbox"}
-          label={props.todo.content}
+          label={props.todo.contents}
           className="CheckBox"
           checked={props.todo.status === TODO_STATUS.COMPLETE}
           onChange={ (e)=>{
@@ -235,7 +262,11 @@ function DrawTodo(props) {
 }
 
 function DrawModal(props) {
-  const [editValue, setEditValue] = useState(props.todo.content);
+  if (!props.todo) return null; // 투두가 없으면 아무 것도 렌더링하지 않음
+  const [editValue, setEditValue] = useState(props.todo.contents);
+  useEffect(() => {
+    setEditValue(props.todo.contents);
+  }, [props.todo]);
 
   return (
     <Modal
@@ -267,6 +298,81 @@ function DrawModal(props) {
       </Modal.Footer>
     </Modal>
   );
+}
+
+// // 데이터 업데이트를 위한 함수
+// async function updateTodoContents(id, newContents) {
+//   try {
+//     const response = await axios.post('/todos/update', {
+//       filter: { id: id },
+//       update: { contents: newContents },
+//     });
+
+//     console.log('Update result:', response.data);
+//   } catch (error) {
+//     console.error('Error updating user:', error);
+//   }
+// }
+
+// // 호출 예제
+// updateTodoContents(1, 'abc');
+async function insertTodo(id, contents, status) {
+  try {
+    const response = await axios.post('/todos/insert', {
+      id: id,
+      contents: contents,
+      status: status
+    });
+    console.log('Insert result:', response.data);
+  } catch (error) {
+    console.error('Error inserting todo:', error);
+  }
+}
+
+async function getAllTodos() {
+  try {
+    const response = await axios.get('/todos/getAll', {});
+    console.log('GetAllTodos result:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting all todo:', error);
+    throw error;
+  }
+}
+
+async function updateTodoContents(id, newContents) {
+  try {
+    const response = await axios.post('/todos/update', {
+      filter: { id: id },
+      update: { contents: newContents },
+    });
+    console.log('Update result:', response.data);
+  } catch (error) {
+    console.error('Error updating todo:', error);
+  }
+}
+
+async function updateTodoStatus(id, newStatus) {
+  try {
+    const response = await axios.post('/todos/update', {
+      filter: { id: id },
+      update: { status: newStatus },
+    });
+    console.log('Update result:', response.data);
+  } catch (error) {
+    console.error('Error updating todo:', error);
+  }
+}
+
+async function deleteTodo(id) {
+  try {
+    const response = await axios.post('/todos/delete', {
+      filter: { id: id },
+    });
+    console.log('Delete result:', response.data);
+  } catch (error) {
+    console.error('Error deleting todo:', error);
+  }
 }
 
 export default App;
