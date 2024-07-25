@@ -4,7 +4,7 @@ import Nav from 'react-bootstrap/Nav';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 // images
@@ -35,6 +35,13 @@ function App() {
   const [incompletedTodos, setIncompletedTodos] = useState([]);
   const [modalShow, setModalShow] = useState(false);
   const [selectedItem, setSelectedItem] = useState({id: 0, content: 'null', status: TODO_STATUS.INCOMPLETE});
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === '/info') {
+      setMainTab(PAGE_STATUS.INFO);
+    }
+  }, [location]);
 
   useEffect(()=>{
     // Think : 투두가 추가되면 항상 Incompleted로 추가될텐데, completed state도 업데이트하게 됨.
@@ -159,7 +166,12 @@ function App() {
         }/>
         <Route path="/info" element={
           <>
-            <h1>설명란입니다.</h1>
+            <h1><b>리액트 기반의 Todo 프로젝트입니다.</b></h1>
+            <br/>
+            <p style={{textAlign: 'center'}}>
+              저는 강의를 듣고 스스로 React를 학습하여 본 프로젝트를 완성시켰습니다.<br/>
+              연락을 원하시면 buuuuung@naver.com으로 메일을 남겨주세요.
+            </p>
           </>
         }/>
       </Routes>
