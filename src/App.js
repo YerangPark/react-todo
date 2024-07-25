@@ -25,6 +25,7 @@ const PAGE_STATUS = {
 
 function App() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [todos, setTodos] = useState([{id: 1, content: 'Do sth', status: TODO_STATUS.INCOMPLETE},
     {id: 2, content: 'Do anything', status: TODO_STATUS.COMPLETE}]);
@@ -35,7 +36,14 @@ function App() {
   const [incompletedTodos, setIncompletedTodos] = useState([]);
   const [modalShow, setModalShow] = useState(false);
   const [selectedItem, setSelectedItem] = useState({id: 0, content: 'null', status: TODO_STATUS.INCOMPLETE});
-  const location = useLocation();
+
+  useEffect(()=>{
+    // 초반에 로컬 스토리지에서 불러오기
+    let localData = localStorage.getItem('data');
+    if (localData) {
+      setTodos(JSON.parse(localData));
+    }
+  }, []);
 
   useEffect(() => {
     if (location.pathname === '/info') {
@@ -44,8 +52,6 @@ function App() {
   }, [location]);
 
   useEffect(()=>{
-    // Think : 투두가 추가되면 항상 Incompleted로 추가될텐데, completed state도 업데이트하게 됨.
-    // Think : 또한 마지막 인덱스만 검사하면 되지 않나..? 싶기도 한데 -> 그러면 todo update 함수에서 처리하면 도는 횟수도 줄 것 같은데..
     const newCompletedTodos = [];
     const newIncompletedTodos = [];
 
@@ -65,14 +71,14 @@ function App() {
     let tmpTodos = [...todos];
     let idx = tmpTodos.findIndex(obj => obj.id === parseInt(id));
     tmpTodos[idx].status = value;
-    setTodos(tmpTodos);
+    handleSaveTodos(tmpTodos);
   }
 
   function deleteTodo(id) {
     let tmpTodos = [...todos];
     let idx = tmpTodos.findIndex(obj => obj.id === parseInt(id));
     tmpTodos.splice(idx, 1);
-    setTodos(tmpTodos);
+    handleSaveTodos(tmpTodos);
   }
 
   function handleAddButtonClick() {
@@ -81,7 +87,7 @@ function App() {
       newId = todos[todos.length-1].id + 1;
     }
     let tmpTodo = {id: newId, content: inputStr, status: TODO_STATUS.INCOMPLETE};
-    setTodos([...todos, tmpTodo]);
+    handleSaveTodos([...todos, tmpTodo]);
     setInputStr('');
   }
 
@@ -94,7 +100,13 @@ function App() {
     let tmpTodos = [...todos];
     let idx = tmpTodos.findIndex(obj => obj.id === parseInt(id));
     tmpTodos[idx].content = value;
-    setTodos(tmpTodos);
+    handleSaveTodos(tmpTodos);
+  }
+
+  function handleSaveTodos(data) {
+    setTodos(data);
+    // 로컬 스토리지에 저장
+    localStorage.setItem('data', JSON.stringify(data));
   }
 
   return (
