@@ -3,33 +3,21 @@ import React, { useState, useEffect } from 'react';
 import Nav from 'react-bootstrap/Nav';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
-import Modal from 'react-bootstrap/Modal';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-// images
-import { ReactComponent as EditImg } from './img/Edit.svg';
-import { ReactComponent as DeleteImg } from './img/Delete.svg';
 
-
-const TODO_STATUS = {
-  ALL : 0,
-  INCOMPLETE : 1,
-  COMPLETE : 2,
-}
-
-const PAGE_STATUS = {
-  TODO : 0,
-  INFO : 1,
-}
+// components
+import DrawTodo from './components/DrawTodo'
+import DrawModal from './components/DrawModal'
+import todoApi from './api/todoApi'
+import { TODO_STATUS, PAGE_STATUS } from './constants/todoConst';
 
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const [todos, setTodos] = useState([]);
-  // {id: 1, contents: 'Do sth', status: TODO_STATUS.INCOMPLETE}, {id: 2, contents: 'Do anything', status: TODO_STATUS.COMPLETE}
   const [inputStr, setInputStr] = useState("");
   const [tab, setTab] = useState(TODO_STATUS.ALL);
   const [mainTab, setMainTab] = useState(PAGE_STATUS.TODO);
@@ -40,7 +28,7 @@ function App() {
 
   useEffect(()=>{
     // 초반에 로컬 스토리지에서 불러오기
-    getAllTodos()
+    todoApi.getAllTodos()
     .then((todoData) => {
       setTodos(todoData);
     })
@@ -78,7 +66,7 @@ function App() {
     let idx = tmpTodos.findIndex(obj => obj.id === parseInt(id));
     tmpTodos[idx].status = value;
     setTodos(tmpTodos);
-    updateTodoStatus(id, value)
+    todoApi.updateTodoStatus(id, value)
     .catch((error) => {
       setTodos(previousTodos);
       console.error('Error handling change todo status:', error);
@@ -91,7 +79,7 @@ function App() {
     let idx = tmpTodos.findIndex(obj => obj.id === parseInt(id));
     tmpTodos.splice(idx, 1);
     setTodos(tmpTodos);
-    deleteTodo(id)
+    todoApi.deleteTodo(id)
     .catch((error) => {
       setTodos(previousTodos);
       console.error('Error handling delete todo:', error);
@@ -107,7 +95,7 @@ function App() {
     let tmpTodo = {id: newId, contents: inputStr, status: TODO_STATUS.INCOMPLETE};
     setTodos([...todos, tmpTodo]);
     setInputStr('');
-    insertTodo(newId, inputStr, TODO_STATUS.INCOMPLETE)
+    todoApi.insertTodo(newId, inputStr, TODO_STATUS.INCOMPLETE)
     .catch((error) => {
       setTodos(previousTodos);
       console.error('Error handling get all todos:', error);
@@ -130,7 +118,7 @@ function App() {
     tmpTodos[idx].contents = value;
     setTodos(tmpTodos);
 
-    updateTodoContents(id, value)
+    todoApi.updateTodoContents(id, value)
     .catch((error) => {
       setTodos(previousTodos);
       console.error('Error handling edit todo:', error);
@@ -236,143 +224,6 @@ function App() {
       </div>
     </div>
   );
-}
-
-function DrawTodo(props) {
-  return (
-    <Form>
-      <div key={"default-checkbox"} className="mb-3">
-        <Form.Check
-          type="checkbox"
-          id={"default-checkbox"}
-          label={props.todo.contents}
-          className="CheckBox"
-          checked={props.todo.status === TODO_STATUS.COMPLETE}
-          onChange={ (e)=>{
-            console.log(e.target.checked);
-            if (e.target.checked) { props.changeStatusFunc(props.todo.id, TODO_STATUS.COMPLETE); }
-            else { props.changeStatusFunc(props.todo.id, TODO_STATUS.INCOMPLETE); }
-          } }
-        />
-        <EditImg width="25" height="25" fill="black" stroke="black" onClick={()=>{props.handleEditButtonClick(props.todo);}}/>
-        <DeleteImg width="30" height="30" fill="black" stroke="black" onClick={()=>props.deleteTodoFunc(props.todo.id)}/>
-      </div>
-    </Form>
-  );
-}
-
-function DrawModal(props) {
-  if (!props.todo) return null; // 투두가 없으면 아무 것도 렌더링하지 않음
-  const [editValue, setEditValue] = useState(props.todo.contents);
-  useEffect(() => {
-    setEditValue(props.todo.contents);
-  }, [props.todo]);
-
-  return (
-    <Modal
-      show={props.show}
-      onHide={props.onHide}
-      size="lg"
-      aria-labelledby="contained-modal-title-vcenter"
-      centered
-    >
-      <Modal.Header closeButton>
-        <Modal.Title id="contained-modal-title-vcenter">
-          Edit
-        </Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form.Control
-          type="text"
-          id="inputTodo"
-          aria-describedby="todoInputBlock"
-          placeholder="Type..."
-          className="mb-3"
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)} // TODO : 추후 length 제한 걸기. 300자?
-        />
-      </Modal.Body>
-      <Modal.Footer>
-        <Button onClick={() => {props.onSave(props.todo.id, editValue); props.onHide()}}>Save</Button>
-        <Button onClick={props.onHide}>Close</Button>
-      </Modal.Footer>
-    </Modal>
-  );
-}
-
-// // 데이터 업데이트를 위한 함수
-// async function updateTodoContents(id, newContents) {
-//   try {
-//     const response = await axios.post('/todos/update', {
-//       filter: { id: id },
-//       update: { contents: newContents },
-//     });
-
-//     console.log('Update result:', response.data);
-//   } catch (error) {
-//     console.error('Error updating user:', error);
-//   }
-// }
-
-// // 호출 예제
-// updateTodoContents(1, 'abc');
-async function insertTodo(id, contents, status) {
-  try {
-    const response = await axios.post('/todos/insert', {
-      id: id,
-      contents: contents,
-      status: status
-    });
-    console.log('Insert result:', response.data);
-  } catch (error) {
-    console.error('Error inserting todo:', error);
-  }
-}
-
-async function getAllTodos() {
-  try {
-    const response = await axios.get('/todos/getAll', {});
-    console.log('GetAllTodos result:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Error getting all todo:', error);
-    throw error;
-  }
-}
-
-async function updateTodoContents(id, newContents) {
-  try {
-    const response = await axios.post('/todos/update', {
-      filter: { id: id },
-      update: { contents: newContents },
-    });
-    console.log('Update result:', response.data);
-  } catch (error) {
-    console.error('Error updating todo:', error);
-  }
-}
-
-async function updateTodoStatus(id, newStatus) {
-  try {
-    const response = await axios.post('/todos/update', {
-      filter: { id: id },
-      update: { status: newStatus },
-    });
-    console.log('Update result:', response.data);
-  } catch (error) {
-    console.error('Error updating todo:', error);
-  }
-}
-
-async function deleteTodo(id) {
-  try {
-    const response = await axios.post('/todos/delete', {
-      filter: { id: id },
-    });
-    console.log('Delete result:', response.data);
-  } catch (error) {
-    console.error('Error deleting todo:', error);
-  }
 }
 
 export default App;
