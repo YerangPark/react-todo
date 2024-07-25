@@ -40,4 +40,5 @@
 해당 프로젝트의 결과물을 확인하려면 아래의 절차를 따라주세요.
 
  - /frontend 경로에서 빌드를 수행 : `npm run build`
- - /backend 경로에서 서버 작동을 시작 : `node server.js`
+ - /backend 경로에서 관련 모듈 설치 : `npm install`
+ - /backend 경로에서 서버 작동을 시작 :  `node server.js`
