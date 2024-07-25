@@ -1,0 +1,71 @@
+# Node.js 관련
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 환경 변수 파일
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 로그 파일
+logs/
+*.log
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# 디렉토리 구조 파일
+.DS_Store
+
+# 빌드 디렉토리
+/react_build/
+dist/
+public/
+tmp/
+out/
+
+# 빌드된 애플리케이션 파일
+*.js
+*.js.map
+*.d.ts
+
+# 테스트 파일
+coverage/
+*.lcov
+
+# 배포 파일
+.deploy/
+*.tgz
+
+# 비주얼 스튜디오 코드
+.vscode/
+.history/
+
+# IntelliJ IDEA 관련 파일
+.idea/
+
+# OS별 파일
+*.swp
+*.swo
+
+# yarn.lock
+yarn.lock
+
+# pnpm 관련 파일
+pnpm-lock.yaml
+.pnpm-debug.log*
+
+# Parcel 빌드 디렉토리
+.cache/
+
+# VSCode 디렉토리 및 설정 파일
+.vscode/
+
+# 기타
+*.bak
+*.orig
