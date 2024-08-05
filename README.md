@@ -11,8 +11,6 @@
 - CRUD 기능 구현
 - 재접속 시에도 데이터가 남아있도록 LocalStorage와 Node.js+Express 두 방식으로 각각 적용하기
 - 메인 페이지와 Help 페이지를 라우팅(Reduct)
-- PWA로 모바일에서도 예쁘게 보이게 만들어보기
-
 <br/>
 
 ## 목업
